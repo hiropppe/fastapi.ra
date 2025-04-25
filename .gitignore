@@ -1,0 +1,17 @@
+.idea
+.vscode/*
+!.vscode/launch.json
+node_modules
+.eslintcache
+.Trash-0/
+.ipynb_checkpoints/
+.tmp/
+__pycache__
+*.pyc
+
+!/volumes/var/
+!/volumes/var/lib/
+!/volumes/var/lib/mysql/
+/volumes/var/lib/mysql/*
+!.gitkeep
+

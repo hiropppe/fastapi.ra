@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS tuto;
+ALTER DATABASE tuto CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+GRANT ALL PRIVILEGES ON `tuto`.* TO `tuto`@`%`;
+
