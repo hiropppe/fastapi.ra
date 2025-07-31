@@ -10,11 +10,11 @@ services:
         volumes:
             - .:/usr/src/app
         command: ["bash"]
-    api:
+    back:
         build:
-            context: ./api
-        image: fastapi.ra/api
-        container_name: fara.api
+            context: ./back
+        image: fastapi.ra/back
+        container_name: fara.back
         env_file: .api.env
         network_mode: host
         tty: true
