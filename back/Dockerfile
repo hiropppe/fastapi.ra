@@ -20,10 +20,10 @@ ENV PATH=${PATH}:/root/.local/bin
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN echo 'eval "$(uv generate-shell-completion bash)"' >> $HOME/.bashrc
 
-RUN mkdir -p /usr/src/app/api
-COPY . /usr/src/app/api
+RUN mkdir -p /app/back
+COPY . /app/back
 
-WORKDIR /usr/src/app/api
+WORKDIR /app/back
 
 RUN uv sync --reinstall
 

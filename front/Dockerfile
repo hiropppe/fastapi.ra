@@ -19,10 +19,10 @@ RUN npm install n -g
 RUN n stable
 RUN apt-get purge -y nodejs npm
  
-RUN mkdir -p /usr/src/app/front
-COPY . /usr/src/app/front
+RUN mkdir -p /app/front
+COPY . /app/front
  
-WORKDIR /usr/src/app/front
+WORKDIR /app/front
 
 RUN npm install
 
