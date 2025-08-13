@@ -7,9 +7,8 @@
     "context": "../" 
   },
   "runArgs": [
-      "--init",
-      "--rm",
-      "--name", "fara.front"
+      "--name", "fara.front",
+      "--rm"
   ],
   "customizations": {
     "vscode": {
@@ -17,7 +16,13 @@
         "ms-python.python",
         "ms-python.debugpy",
         "charliermarsh.ruff",
-        "tamasfe.even-better-toml"
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-json",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/app/back/.venv/bin/python",
@@ -26,6 +31,19 @@
         "python.linting.ruffEnabled": true,
         "python.linting.pylintEnabled": false,
         "python.linting.flake8Enabled": false,
+        "python.formatting.provider": "black",
+        "python.formatting.blackPath": "/app/back/.venv/bin/black",
+        "ruff.path": ["/app/back/.venv/bin/ruff"],
+        "ruff.organizeImports": true,
+        "ruff.fixAll": true,
+        "[python]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "source.fixAll.ruff": "explicit"
+          },
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        },
         "files.exclude": {
           "**/__pycache__": true,
           "**/.pytest_cache": true,
