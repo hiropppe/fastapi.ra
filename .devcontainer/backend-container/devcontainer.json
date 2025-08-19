@@ -31,14 +31,22 @@
         ],
         "editor.rulers": [88],
         "editor.tabSize": 4,
-        "editor.insertSpaces": true
+        "editor.insertSpaces": true,
+        "[python]": {
+            "editor.formatOnSave": true,
+            "editor.codeActionsOnSave": {
+                "source.fixAll": "explicit",
+                "source.organizeImports": "explicit"
+            },
+            "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   },
   
-  "forwardPorts": [8000],
+  "forwardPorts": [18000],
   "portsAttributes": {
-    "8000": {
+    "18000": {
       "label": "FastAPI",
       "onAutoForward": "notify"
     }

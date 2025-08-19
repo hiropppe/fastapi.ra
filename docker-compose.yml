@@ -8,6 +8,7 @@ services:
         network_mode: host
         tty: true
         volumes:
+            # Mount the root folder that contains .git
             - .:/app
         command: ["bash"]
     back:
@@ -19,6 +20,7 @@ services:
         network_mode: host
         tty: true
         volumes:
+            # Mount the root folder that contains .git
             - .:/app
         command: ["bash"]
     db:
