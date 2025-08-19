@@ -19,11 +19,9 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "tuto.api:app",
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "18000",
+                "app.api:app",
+                "--host", "0.0.0.0",
+                "--port", "8000",
                 "--reload"
             ],
             "jinja": true

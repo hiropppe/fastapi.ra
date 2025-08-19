@@ -1,0 +1,30 @@
+{
+  "name": "Frontend",
+  "dockerComposeFile": ["../../docker-compose.yml"],
+  "service": "front",
+  "shutdownAction": "none",
+  "workspaceFolder": "/app/front",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",         // Integrates ESLint JavaScript into VS Code.
+        "esbenp.prettier-vscode",         // Code formatter using prettier.
+        "dsznajder.es7-react-js-snippets" // Extensions for React, React-Native and Redux in JS/TS with ES7+ syntax. Customizable. Built-in integration with prettier.
+      ],
+      "settings": {
+        "editor.rulers": [88],
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+      }
+    }
+  }, 
+  //"forwardPorts": [5173],
+  //"portsAttributes": {
+  //  "5173": {
+  //    "label": "FastAPI",
+  //    "onAutoForward": "notify"
+  //  }
+  //},
+  
+  "remoteUser": "root"
+}

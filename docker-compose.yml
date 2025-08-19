@@ -5,7 +5,9 @@ services:
         image: fastapi.ra/front
         container_name: fara.front
         env_file: .front.env
-        network_mode: host
+        #network_mode: host
+        ports:
+            - "15173:5173"
         tty: true
         volumes:
             # Mount the root folder that contains .git
@@ -17,7 +19,9 @@ services:
         image: fastapi.ra/back
         container_name: fara.back
         env_file: .api.env
-        network_mode: host
+        #network_mode: host
+        ports:
+            - "18000:8000"
         tty: true
         volumes:
             # Mount the root folder that contains .git
