@@ -19,7 +19,6 @@ if [ "$(id -u)" -eq 0 ]; then
   chown -R $USER:$USER /app
   exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 else
-  exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
-  #exec "$@"
+  exec "$@"
 fi
 
