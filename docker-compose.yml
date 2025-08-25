@@ -16,6 +16,10 @@ services:
     back:
         build:
             context: ./back
+            #args:
+            #    - USERNAME:take
+            #    - USER_UID:1000
+            #    - USER_GID:1000
         image: fastapi.ra/back
         container_name: fara.back
         env_file: .api.env

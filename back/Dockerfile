@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ARG USERNAME=take
 ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+ARG USER_GID=1000
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -39,7 +39,7 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> $HOME/.bashrc
 
 RUN mkdir -p /app/back
 COPY . /app/back
-RUN chown -R $USER_UID:$USER_GID /app
+RUN chown -R $USERNAME:$USERNAME /app
 
 WORKDIR /app/back
 
@@ -47,11 +47,12 @@ WORKDIR /app/back
 RUN uv sync --reinstall
 
 COPY docker-entrypoint.sh /
-RUN chown $USER_UID:$USER_GID /docker-entrypoint.sh && chmod 0700 /docker-entrypoint.sh
+#RUN chown $USERNAME:$USERNAME /docker-entrypoint.sh && chmod 0500 /docker-entrypoint.sh
+RUN chmod 0500 /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 RUN ["bash"]
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
-USER $USERNAME
+#USER $USERNAME
 
