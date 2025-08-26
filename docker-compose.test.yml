@@ -1,0 +1,62 @@
+services:
+    front:
+        build:
+            context: ./front
+        image: fastapi.ra/front
+        container_name: fara.front
+        env_file: .front.env
+        #network_mode: host
+        ports:
+            - "15173:5173"
+        tty: true
+        command: ["bash"]
+    back:
+        build:
+            context: ./back
+        image: fastapi.ra/back
+        container_name: fara.back
+        env_file: .api.env
+        #network_mode: host
+        ports:
+            - "18000:8000"
+        tty: true
+        command: ["bash"]
+        user: "1000:1000"
+    db:
+        image: mysql:9
+        container_name: fara.db
+        ports:
+            - "3336:3306"
+        volumes:
+            - ./volumes/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+            - ./volumes/var/lib/mysql:/var/lib/mysql
+            - ./volumes/etc/mysql/conf.d:/etc/mysql/conf.d
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: tuto
+            MYSQL_PASSWORD: tuto
+            TZ: "Asia/Tokyo"
+        healthcheck:
+            test: ["CMD", "mysql", "-ututo", "-ptuto", "-e", "SELECT 1"]
+            interval: 6s
+            timeout: 1s
+            retries: 5
+    testdb:
+        image: mysql:9
+        container_name: fara.testdb
+        ports:
+            - "3337:3306"
+        volumes:
+            - ./volumes/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+            - ./volumes/etc/mysql/conf.d:/etc/mysql/conf.d
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: tuto
+            MYSQL_PASSWORD: tuto
+            TZ: "Asia/Tokyo"
+        healthcheck:
+            test: ["CMD", "mysql", "-ututo", "-ptuto", "-e", "SELECT 1"]
+            interval: 6s
+            timeout: 1s
+            retries: 5
+

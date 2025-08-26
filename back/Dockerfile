@@ -6,13 +6,13 @@ ARG USER_GID=1000
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME 
     #
     # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
-    && apt-get update \
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+    #&& apt-get update \
+    #&& apt-get install -y sudo \
+    #&& echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    #&& chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,9 +21,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential pkg-config locales tzdata \
     neovim python3-neovim git curl jq less \
-    ca-certificates \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates
+    #&& apt-get clean
+    #&& apt-get clean \
+    #&& rm -rf /var/lib/apt/lists/*
 
 # Set up locale
 RUN locale-gen ja_JP.UTF-8
@@ -47,12 +48,10 @@ WORKDIR /app/back
 RUN uv sync --reinstall
 
 COPY docker-entrypoint.sh /
-#RUN chown $USERNAME:$USERNAME /docker-entrypoint.sh && chmod 0500 /docker-entrypoint.sh
-RUN chmod 0500 /docker-entrypoint.sh
+RUN chown $USERNAME:$USERNAME /docker-entrypoint.sh && chmod 0500 /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 RUN ["bash"]
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 #USER $USERNAME
-

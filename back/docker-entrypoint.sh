@@ -6,17 +6,17 @@ export HOME=/home/$USER
 uid=$(stat -c "%u" .)
 gid=$(stat -c "%g" .)
 
-if [ "$(id -u)" -eq 0 ]; then
-  if [ "$uid" -ne 0 ]; then
-    if [ "$(id -g $USER)" -ne $gid ]; then
-        getent group $gid >/dev/null 2>&1 || groupmod -g $gid $USER
-        chgrp -R $gid $HOME
-    fi
-    if [ "$(id -u $USER)" -ne $uid ]; then
-        usermod -u $uid $USER
-    fi
+if [ "$uid" -ne 0 ]; then
+  if [ "$(id -g $USER)" -ne $gid ]; then
+      sudo getent group $gid >/dev/null 2>&1 || sudo groupmod -g $gid $USER
+      sudo chgrp -R $gid $HOME
   fi
-  chown -R $USER:$USER /app
+  if [ "$(id -u $USER)" -ne $uid ]; then
+      sudo usermod -u $uid $USER
+  fi
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
   exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 else
   exec "$@"
