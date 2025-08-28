@@ -2,9 +2,6 @@
 
 export USERNAME=take
 
-echo "$(id -u)"
-echo "$(whoami)"
-
 # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
 apt-get update \
   && apt-get install -y sudo \
