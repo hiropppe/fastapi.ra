@@ -29,23 +29,27 @@ RUN apt-get update \
 # Set up locale
 RUN locale-gen ja_JP.UTF-8
 
-# Set environment variables for locale and timezone
-ENV LANG=ja_JP.UTF-8
-ENV TZ=Asia/Tokyo
-ENV PATH=${PATH}:/root/.local/bin
-
-# Install Node.js and npm
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-RUN echo 'eval "$(uv generate-shell-completion bash)"' >> $HOME/.bashrc
-
 RUN mkdir -p /app/back
 COPY . /app/back
 RUN chown -R $USERNAME:$USERNAME /app
 
 WORKDIR /app/back
 
+USER $USERNAME
+
+# Set environment variables for locale and timezone
+ENV LANG=ja_JP.UTF-8
+ENV TZ=Asia/Tokyo
+ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN echo 'eval "$(uv generate-shell-completion bash)"' >> $HOME/.bashrc
+
 # Install Python dependencies
 RUN uv sync --reinstall
+
+USER root
 
 COPY docker-entrypoint.sh /
 RUN chown $USERNAME:$USERNAME /docker-entrypoint.sh && chmod 0500 /docker-entrypoint.sh
