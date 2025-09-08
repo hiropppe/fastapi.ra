@@ -51,6 +51,8 @@
   //     "onAutoForward": "notify"
   //   }
   // },
-  "onCreateCommand": "chmod 0500 ../.devcontainer/add-sudoers.sh && ../.devcontainer/add-sudoers.sh"
-  //"remoteUser": "take"
+
+  // "onCreateCommand": "chmod 0500 ../.devcontainer/add-sudoers.sh && ../.devcontainer/add-sudoers.sh"
+
+  // "remoteUser": "take"
 }

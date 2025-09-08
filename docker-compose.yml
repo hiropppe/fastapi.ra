@@ -16,6 +16,7 @@ services:
     back:
         build:
             context: ./back
+            target: devel
             #args:
             #    - USERNAME:take
             #    - USER_UID:1000
