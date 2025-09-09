@@ -74,7 +74,7 @@ RUN apt-get update \
 
 ENV BUILD_MODE=devel
 
-USER $USERNAME
+#USER $USERNAME
 
 
 ## Runtime Stage
@@ -84,5 +84,5 @@ ENV BUILD_MODE=runtime
 
 CMD ["uv", "run", "python3", "app/main.py"]
 
-USER $USERNAME
+#USER $USERNAME
 

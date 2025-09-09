@@ -16,7 +16,7 @@ services:
     back:
         build:
             context: ./back
-            target: devel
+            target: runtime
             #args:
             #    - USERNAME:take
             #    - USER_UID:1000
@@ -28,10 +28,10 @@ services:
         ports:
             - "18000:8000"
         tty: true
-        volumes:
-            # Mount the root folder that contains .git
-            - .:/app
-        command: ["bash"]
+        #volumes:
+        #    # Mount the root folder that contains .git
+        #    - .:/app
+        #command: ["bash"]
     db:
         image: mysql:9
         container_name: fara.db
