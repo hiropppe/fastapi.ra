@@ -16,11 +16,13 @@ services:
     back:
         build:
             context: ./back
-            target: runtime
-            #args:
-            #    - USERNAME:take
-            #    - USER_UID:1000
-            #    - USER_GID:1000
+            target: devel
+            args:
+                - USERNAME:take
+                - USER_UID:1000
+                #- USER_UID:2003
+                - USER_GID:1000
+                #- USER_GID:2000
         image: fastapi.ra/back
         container_name: fara.back
         env_file: .api.env
@@ -28,9 +30,9 @@ services:
         ports:
             - "18000:8000"
         tty: true
-        #volumes:
-        #    # Mount the root folder that contains .git
-        #    - .:/app
+        volumes:
+            # Mount the root folder that contains .git
+            - .:/app
         #command: ["bash"]
     db:
         image: mysql:9

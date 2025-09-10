@@ -3,21 +3,30 @@
 export USER=take
 export HOME=/home/$USER
 
-uid=$(stat -c "%u" .)
-gid=$(stat -c "%g" .)
+if [ "$(id -u)" -eq 0 ]; then
+    # When simply run docker (or docker-compose) as root, change user uid and gid to those of the working directory at runtime.
+    uid=$(stat -c "%u" .)
+    gid=$(stat -c "%g" .)
 
-if [ "$uid" -ne 0 ]; then
-  if [ "$(id -g $USER)" -ne $gid ]; then
-    getent group $gid >/dev/null 2>&1 || groupmod -g $gid $USER
-    chgrp -R $gid $HOME
-  fi
-  if [ "$(id -u $USER)" -ne $uid ]; then
-    usermod -u $uid $USER
-  fi
+    if [ "$uid" -ne 0 ]; then
+        if [ "$(id -g $USER)" -ne $gid ]; then
+            getent group $gid >/dev/null 2>&1 || groupmod -g $gid $USER
+            chgrp -R $gid $HOME
+        fi
+        if [ "$(id -u $USER)" -ne $uid ]; then
+            usermod -u $uid $USER
+        fi
+    fi
+
+    exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
+else
+    # When launching in a devcontainer, the assumption is that user creation will occur by passing the host directory's ID during build time.
+    exec "$@"
 fi
 
-exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
-
+### Error after changing uid and gid when execcuted by a non-root user.
+## groups: cannot find name for group ID 1000
+## bash: /home/take/.bashrc: Permission denied
 #if [ "$BUILD_MODE" == "devel" ]; then
 #  if [ "$(id -u)" -eq 0 ]; then
 #    sd=""  
@@ -36,9 +45,6 @@ exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 #if [ "$(id -u)" -eq 0 ]; then
 #  exec setpriv --reuid=$USER --regid=$USER --init-groups "$@"
 #else
-#  ## Error after changing uid and gid when execcuted by a non-root user.
-#  # groups: cannot find name for group ID 1000
-#  # bash: /home/take/.bashrc: Permission denied
 #  exec "$@"
 #fi
 
