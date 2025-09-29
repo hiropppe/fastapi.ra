@@ -2,6 +2,12 @@ services:
     front:
         build:
             context: ./front
+            args:
+                - USERNAME:take
+                #- USER_UID:1000
+                - USER_UID:2003
+                #- USER_GID:1000
+                - USER_GID:2000
         image: fastapi.ra/front
         container_name: fara.front
         env_file: .front.env
@@ -19,10 +25,10 @@ services:
             target: devel
             args:
                 - USERNAME:take
-                - USER_UID:1000
-                #- USER_UID:2003
-                - USER_GID:1000
-                #- USER_GID:2000
+                #- USER_UID:1000
+                - USER_UID:2003
+                #- USER_GID:1000
+                - USER_GID:2000
         image: fastapi.ra/back
         container_name: fara.back
         env_file: .api.env

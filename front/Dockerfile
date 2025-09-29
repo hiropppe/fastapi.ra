@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ARG USERNAME=take
 ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+ARG USER_GID=1000
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -45,7 +45,8 @@ WORKDIR /app/front
 RUN npm install
 
 COPY docker-entrypoint.sh /
-RUN chown $USER_UID:$USER_GID /docker-entrypoint.sh && chmod 0700 /docker-entrypoint.sh
+#RUN chown $USER_UID:$USER_GID /docker-entrypoint.sh && chmod 0700 /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
  
 CMD ["bash"]

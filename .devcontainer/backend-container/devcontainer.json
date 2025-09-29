@@ -10,7 +10,9 @@
         "ms-python.python",
         "ms-python.debugpy",
         "charliermarsh.ruff",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "github.copilot",
+        "github.copilot-chat"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/app/back/.venv/bin/python",
