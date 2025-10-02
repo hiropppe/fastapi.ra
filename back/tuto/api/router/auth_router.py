@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
 from tuto.api.schema.auth_schema import AuthUser, LoginUser
-from tuto.auth.auth_helper import SECURE_HTTP_ONLY_COOKIE, OAuth2PasswordOTPBearerUsingCookie, encode_cookie_data
+from tuto.auth.auth_helper import (
+    SECURE_HTTP_ONLY_COOKIE,
+    OAuth2PasswordOTPBearerUsingCookie,
+    encode_cookie_data,
+)
 from tuto.auth.ip_restriction import is_password_reset_restricted, verify_ip_access
 from tuto.datasource.database import get_session
 from tuto.service.auth_protocol import (
@@ -59,7 +63,6 @@ async def check_password_reset_availability(
     クライアントIPからパスワードリセット機能の利用可否を確認
     メールアドレス未設定の取引先IPの場合はパスワードリセット機能を利用不可とする
     """
-
     is_restricted = await is_password_reset_restricted(request)
 
     if is_restricted:
@@ -169,4 +172,6 @@ def set_auth_cookie(response: Response, token_data: dict, max_age: int) -> None:
 
 
 def get_user(username: str, session: Session) -> AuthUser:
-    return AuthUser(username=username, id=1, nickname=username, email=f"{username}@test.com")
+    return AuthUser(
+        username=username, id=1, nickname=username, email=f"{username}@test.com"
+    )
