@@ -1,0 +1,28 @@
+name: e2e
+
+services:
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    image: fastapi.ra/e2e
+    container_name: fara.e2e
+    network_mode: host
+    volumes:
+        - .:/app
+    #ports:
+    #  - "3000:3000"
+    #tty: true
+    environment:
+        - PW_TEST_CONNECT_WS_ENDPOINT=ws://localhost:3000/
+    command: ["npx", "playwright", "test"]
+    depends_on:
+        pw-server:
+            condition: service_started
+  pw-server:
+    image: mcr.microsoft.com/playwright:v1.55.1-noble
+    container_name: fara.pw-server
+    network_mode: host
+    ipc: host
+    command: ["npx", "-y", "playwright@1.55.1", "run-server", "--port", "3000", "--host", "0.0.0.0"] 
+
