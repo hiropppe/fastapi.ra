@@ -18,7 +18,7 @@ export const AuthClient = ( endpointRoot: string ) => {
                 .catch(
                     ( error: HttpError ) => {
                         if (error.status === 403) {
-                            return Promise.reject(new Error('アクセスが禁止されています。サポートにお問い合わせください。'));
+                            return Promise.reject(new Error('アクセスが禁止されています。'));
                         }
                         return Promise.reject(new Error('ra.auth.sign_in_error'));
                     }

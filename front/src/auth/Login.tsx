@@ -65,7 +65,6 @@ export const LoginForm = (props: any) => {
     
     const [passwordResetState, setPasswordResetState] = React.useState<PasswordResetState>('login');
     const [passwordResetData, setPasswordResetData] = React.useState<PasswordResetData>({});
-    const [passwordResetAvailable, setPasswordResetAvailable] = React.useState<boolean>(true);
     
     const [
         login,
@@ -86,21 +85,6 @@ export const LoginForm = (props: any) => {
     const authClient = React.useMemo(() => {
         const authProviderUrl = import.meta.env.VITE_AUTH_PROVIDER_URL || 'http://localhost:8001/auth';
         return AuthClient(authProviderUrl);
-    }, []);
-
-    // パスワードリセット機能の利用可否をチェック
-    React.useEffect(() => {
-        const checkPasswordResetAvailability = async () => {
-            try {
-                const result = await authClient.checkPasswordResetAvailability();
-                setPasswordResetAvailable(result.password_reset_available);
-            } catch (error) {
-                // エラーの場合はデフォルトで利用可能とする
-                setPasswordResetAvailable(true);
-            }
-        };
-
-        checkPasswordResetAvailability();
     }, []);
 
     const submit: SubmitHandler<FormData> = values => {
@@ -166,7 +150,6 @@ export const LoginForm = (props: any) => {
         );
     }
 
-
     // 新規パスワード設定フロー
     if (requireNewPassword) {
         return (
@@ -200,7 +183,7 @@ export const LoginForm = (props: any) => {
             submit={submit}
             isLoading={isPending}
             className={className}
-            onForgotPassword={passwordResetAvailable ? handleForgotPassword : undefined}
+            onForgotPassword={handleForgotPassword}
         />
     );
 };

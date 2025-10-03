@@ -55,28 +55,6 @@ async def get_current_user(
     return api_user
 
 
-@router.get("/check_password_reset_availability")
-async def check_password_reset_availability(
-    request: Request,
-) -> dict:
-    """
-    クライアントIPからパスワードリセット機能の利用可否を確認
-    メールアドレス未設定の取引先IPの場合はパスワードリセット機能を利用不可とする
-    """
-    is_restricted = await is_password_reset_restricted(request)
-
-    if is_restricted:
-        return {
-            "password_reset_available": False,
-            "reason": "お客様の環境ではパスワードリセット機能をご利用いただけません。パスワードを忘れた場合はお問い合わせください。",
-        }
-
-    return {
-        "password_reset_available": True,
-        "reason": None,
-    }
-
-
 @router.post("/token")
 async def login_for_access_token(
     # login_user: LoginUser,

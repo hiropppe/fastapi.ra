@@ -36,7 +36,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         
         const newErrors: {[key: string]: string} = {};
 
-        // バリデーション
         if (!email) {
             newErrors.email = 'メールアドレスを入力してください';
         } else if (email.trim().length === 0) {
