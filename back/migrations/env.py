@@ -1,8 +1,12 @@
+import re
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
+
+# Import all models here to ensure they are registered with SQLModel.metadata
+import tuto.model  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,6 +28,18 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# Read the list of tables to exclude from migrations
+# https://gist.github.com/utek/6163250?permalink_comment_id=4042622#gistcomment-4042622
+exclude_tables = re.sub(
+    r"\s+",
+    "",
+    config.get_section_option("alembic:exclude", "tables"),  # type: ignore
+).split(",")
+
+
+def include_object(object, name, type_, *args, **kwargs) -> bool:
+    return not (type_ == "table" and name in exclude_tables)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -43,6 +59,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -63,7 +80,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
