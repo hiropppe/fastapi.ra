@@ -65,7 +65,7 @@ password_reset_restricted_ips = []
 user_ip_restrictions = {}
 
 
-async def verify_ip_access(request: Request, user_id: str) -> bool:
+def verify_ip_access(request: Request, user_id: str) -> bool:
     """ユーザーのIPアクセス制限を確認するミドルウェア関数"""
     client_ip = get_client_ip(request)
 
@@ -82,26 +82,3 @@ async def verify_ip_access(request: Request, user_id: str) -> bool:
         raise AccessDeniedError(msg)
 
     return False
-
-
-async def is_password_reset_restricted(request: Request) -> bool:
-    """クライアントIPがパスワードリセット制限対象かどうかを確認"""
-    client_ip = get_client_ip(request)
-
-    try:
-        client_ip_addr = ipaddress.ip_address(client_ip)
-
-        for restricted_ip in password_reset_restricted_ips:
-            # CIDR表記チェック（例: 192.168.1.0/24）
-            if "/" in restricted_ip:
-                network = ipaddress.ip_network(restricted_ip, strict=False)
-                if client_ip_addr in network:
-                    return True
-            # 単一IPアドレスの比較
-            elif client_ip == restricted_ip:
-                return True
-
-        return False
-    except ValueError:
-        # IPアドレスの解析に失敗
-        return False

@@ -2,7 +2,6 @@ from typing import ClassVar
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.mysql import BIGINT, TINYINT, VARCHAR
-from sqlalchemy.orm import mapped_column
 from sqlmodel import Field, SQLModel
 
 from tuto.model import AuditMixin

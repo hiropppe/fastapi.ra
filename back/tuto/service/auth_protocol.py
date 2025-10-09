@@ -1,6 +1,12 @@
 from typing import Protocol
 
+from fastapi import Depends
 from pydantic import BaseModel
+from sqlmodel import Session
+
+from tuto.datasource.database import get_session
+from tuto.service.impl.cognito_auth_service import CognitoAuthService
+from tuto.service.impl.local_auth_service import LocalAuthService
 
 
 class Token(BaseModel):
@@ -70,3 +76,13 @@ class AuthProtocol(Protocol):
         old_password: str,
         new_password: str,
     ) -> None: ...
+
+
+def get_auth_service(
+    username: str,
+    session: Session = Depends(get_session),
+) -> AuthProtocol:
+    if username.endswith("@example.com"):
+        return LocalAuthService(session)
+    else:
+        return CognitoAuthService()

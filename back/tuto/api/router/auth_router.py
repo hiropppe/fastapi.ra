@@ -1,6 +1,3 @@
-import os
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
@@ -10,7 +7,7 @@ from tuto.auth.auth_helper import (
     OAuth2PasswordOTPBearerUsingCookie,
     encode_cookie_data,
 )
-from tuto.auth.ip_restriction import is_password_reset_restricted, verify_ip_access
+from tuto.auth.ip_restriction import verify_ip_access
 from tuto.datasource.database import get_session
 from tuto.service.auth_protocol import (
     AuthProtocol,
@@ -18,6 +15,7 @@ from tuto.service.auth_protocol import (
     Logedin,
     Token,
     TokenData,
+    get_auth_service,
 )
 from tuto.service.impl.local_auth_service import LocalAuthService
 
@@ -71,7 +69,7 @@ async def login_for_access_token(
     # password: str = login_user.password
     # challenge_name: str = login_user.challenge_name
 
-    auth_service: AuthProtocol = LocalAuthService(session)
+    auth_service: AuthProtocol = get_auth_service(username, session)
     token_or_challenge: Token | Challenge = await auth_service.signin(
         username, password, challenge_name
     )
