@@ -1,5 +1,5 @@
 import os
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 
 from sqlalchemy import Engine
 from sqlalchemy.ext.asyncio import (
@@ -47,7 +47,7 @@ async_engine: AsyncEngine = create_async_engine(
     max_overflow=40,
     connect_args=connect_args,
 )
-async_session: AsyncSession = async_sessionmaker(async_engine, class_=AsyncSession)
+async_session = async_sessionmaker(async_engine, class_=AsyncSession)
 
 
 # Sync Session Dependency for FastAPI
@@ -57,6 +57,6 @@ def get_session() -> Generator[Session]:
 
 
 # Async Session Dependency for FastAPI
-async def get_async_session() -> Generator[AsyncSession]:
+async def get_async_session() -> AsyncGenerator[AsyncSession]:
     async with async_session() as session:
         yield session
