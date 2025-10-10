@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
-from tuto.api.schema.auth_schema import AuthUser, LoginUser
+from tuto.api.schema.auth_schema import AuthUser
 from tuto.auth.auth_helper import (
     SECURE_HTTP_ONLY_COOKIE,
     OAuth2PasswordOTPBearerUsingCookie,
@@ -9,13 +9,13 @@ from tuto.auth.auth_helper import (
 )
 from tuto.auth.ip_restriction import verify_ip_access
 from tuto.datasource.database import get_session
+from tuto.service import get_auth_service
 from tuto.service.auth_protocol import (
     AuthProtocol,
     Challenge,
     Logedin,
     Token,
     TokenData,
-    get_auth_service,
 )
 from tuto.service.impl.local_auth_service import LocalAuthService
 

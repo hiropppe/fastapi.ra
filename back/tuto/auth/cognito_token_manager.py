@@ -4,14 +4,15 @@ import time
 from logging import INFO, StreamHandler, getLogger
 
 import requests
-from auth.exceptions import (
+from botocore.exceptions import ClientError
+from jose import JWTError, jwt
+
+from tuto.auth.exceptions import (
     AccessTokenExpirationError,
     AccessTokenRefreshError,
     InvalidAccessTokenError,
     NotAuthorizedError,
 )
-from botocore.exceptions import ClientError
-from jose import JWTError, jwt
 
 logger = getLogger(__name__)
 formatter = logging.Formatter("%(levelname)s: %(asctime)s - %(message)s")
