@@ -24,7 +24,10 @@
                 "--port", "8000",
                 "--reload"
             ],
-            "jinja": true
+            "jinja": true,
+            "cwd": "${workspaceFolder}/src",
+            //"envFile": "${workspaceFolder}/.env", // Optional: if you use a .env file
+            "console": "integratedTerminal",
         }
     ]
 }

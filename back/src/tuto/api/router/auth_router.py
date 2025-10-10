@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
-from tuto.api.schema.auth_schema import AuthUser
 from tuto.auth.auth_helper import (
     SECURE_HTTP_ONLY_COOKIE,
     OAuth2PasswordOTPBearerUsingCookie,
@@ -17,7 +16,9 @@ from tuto.service.auth_protocol import (
     Token,
     TokenData,
 )
-from tuto.service.impl.local_auth_service import LocalAuthService
+
+from ...service.impl.local_auth_service import LocalAuthService
+from ..schema.auth_schema import AuthUser
 
 router = APIRouter()
 
