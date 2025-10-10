@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
+from tuto.api.schema.auth_schema import Me
 from tuto.auth.auth_helper import (
     SECURE_HTTP_ONLY_COOKIE,
     OAuth2PasswordOTPBearerUsingCookie,
@@ -16,9 +17,7 @@ from tuto.service.auth_protocol import (
     Token,
     TokenData,
 )
-
-from ...service.impl.local_auth_service import LocalAuthService
-from ..schema.auth_schema import AuthUser
+from tuto.service.impl.local_auth_service import LocalAuthService
 
 router = APIRouter()
 
@@ -28,10 +27,10 @@ MAX_AUTH_SESSION_AGE = 24 * 60 * 60  # 1 day
 MAX_AUTH_COOKIE_AGE_MARGIN = 60 * 60 * 24 * 30  # 30 days
 
 
-async def get_current_user(
+async def get_me(
     token: tuple[str, str | None, int, int] = Depends(oauth2_scheme),
     session: Session = Depends(get_session),
-) -> AuthUser:
+) -> Me:
     access_token: str = token[0]
     expires_in: int = token[2]
     token_issued_time: float = token[3]
@@ -41,7 +40,7 @@ async def get_current_user(
     token_data: TokenData = await auth_service.get_token_info(
         access_token, expires_in, token_issued_time
     )
-    api_user: AuthUser = get_user(token_data.username, session)
+    api_user: Me = get_user(token_data.username, session)
 
     if api_user is None:
         msg = f"There is no user named {token_data.username} (from token verification) in database"
@@ -64,7 +63,7 @@ async def login_for_access_token(
     form_data = await request.form()
     username: str = form_data["username"]
     password: str = form_data["password"]
-    challenge_name: str = form_data["challenge_name"]
+    challenge_name: str = form_data.get("challenge_name", "ADMIN_USER_PASSWORD_AUTH")
 
     # username: str = login_user.username
     # password: str = login_user.password
@@ -84,15 +83,15 @@ async def login_for_access_token(
     "/users/me",
     summary="",
     description="",
-    response_model=AuthUser,
+    response_model=Me,
     response_description="",
     response_model_exclude_none=True,
 )
 async def read_users_me(
     request: Request,
-    current_user: AuthUser = Depends(get_current_user),
-) -> AuthUser:
-    await verify_ip_access(request, current_user.username)
+    current_user: Me = Depends(get_me),
+) -> Me:
+    verify_ip_access(request, current_user.username)
     return current_user
 
 
@@ -148,7 +147,5 @@ def set_auth_cookie(response: Response, token_data: dict, max_age: int) -> None:
     )
 
 
-def get_user(username: str, session: Session) -> AuthUser:
-    return AuthUser(
-        username=username, id=1, nickname=username, email=f"{username}@test.com"
-    )
+def get_user(username: str, session: Session) -> Me:
+    return Me(username=username, id=1, nickname=username, email=f"{username}@test.com")

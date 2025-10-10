@@ -1,4 +1,6 @@
-from typing import Generic, TypeVar
+from collections.abc import Sequence
+from typing import TypeVar
+
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
@@ -11,5 +13,5 @@ class ResponseBase(BaseModel):
     message: str | None = Field(default=None, title="")
 
 
-class ListResponse(ResponseBase, Generic[T]):
-    data: list[T] = Field(default=[], title="データ")
+class ListResponse[T](ResponseBase):
+    data: Sequence[T] = Field(default=[], title="データ")

@@ -47,6 +47,8 @@ class User(TimestampMixin, UserBase, BigPrimaryKeyMixin, table=True):
         "mysql_collate": "utf8mb4_general_ci",
     }
 
+    model_config = {"from_attributes": True}
+
 
 class NewUser(UserBase):
     """ユーザ作成用モデル"""

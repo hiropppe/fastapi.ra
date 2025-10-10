@@ -1,15 +1,18 @@
-import os
+import json
+from ast import literal_eval
+from collections.abc import Sequence
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from sqlalchemy import text
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Session
 
-from tuto.api.router.auth_router import get_current_user
-from tuto.api.schema.auth_schema import AuthUser
+from tuto.api.router.auth_router import get_me
+from tuto.api.schema.auth_schema import Me
 from tuto.api.schema.base_schema import ListResponse
+from tuto.api.schema.user_schema import UserSchema
 from tuto.datasource.database import get_async_session
+from tuto.finder import PaginationResult
+from tuto.finder.user_finder import UserFinder
 
 router = APIRouter()
 
@@ -25,16 +28,21 @@ async def get_list(
     criteria: Annotated[str, Query(alias="filter")],
     sort: str,
     query_range: Annotated[str, Query(alias="range")],
-    current_user: Annotated[AuthUser, Depends(get_current_user)],
+    current_user: Annotated[Me, Depends(get_me)],
     response: Response,
     asession: Annotated[AsyncSession, Depends(get_async_session)],
-) -> ListResponse[AuthUser]:
+) -> ListResponse[UserSchema]:
     """Get Users"""
-    await asession.execute(text("SELECT 1"))
-    data: list[AuthUser] = [
-        AuthUser(id=1, email="user1@test.com", username="user1", nickname="User 1"),
-        AuthUser(id=2, email="user1@test.com", username="user2", nickname="User 2"),
-    ]
-    response.headers["Content-Range"] = "users 1-2/2"
+    criteria: dict = json.loads(criteria)
+    sort: list = literal_eval(sort)
+    query_range: list = literal_eval(query_range)
+
+    finder: UserFinder = UserFinder(asession)
+    result: PaginationResult = await finder.find(criteria, sort, query_range)
+
+    users: Sequence[dict] = [d._asdict() for d in result.data]
+    response.headers["Content-Range"] = (
+        f"appls {result.start}-{result.end}/{result.total}"
+    )
     response.headers["Access-Control-Expose-Headers"] = "Content-Range"
-    return ListResponse(data=data)
+    return ListResponse[dict](data=users)

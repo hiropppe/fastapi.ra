@@ -1,7 +1,5 @@
 from typing import Protocol, TypeVar
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 PK = TypeVar("PK")  # primary key
 T = TypeVar("T")  # model instance
 

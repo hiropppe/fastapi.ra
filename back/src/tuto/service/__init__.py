@@ -12,7 +12,4 @@ def get_auth_service(
     username: str,
     session: Session = Depends(get_session),
 ) -> AuthProtocol:
-    if username.endswith("@example.com"):
-        return LocalAuthService(session)
-    else:
-        return CognitoAuthService()
+    return LocalAuthService(session)
