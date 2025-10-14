@@ -64,9 +64,9 @@ def doc_generation(
 
         versioned_app.router.routes.extend(unique_routes.values())
 
-        prefix = f"/version_{version}"
+        prefix = f"/v{version}"
         if version is None:
-            prefix = "/no_version"
+            prefix = "/"
         parent_app.mount(prefix, versioned_app)
 
     return parent_app
