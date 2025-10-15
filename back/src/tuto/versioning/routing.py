@@ -25,9 +25,7 @@ from enum import Enum
 from functools import cache
 from typing import (
     Any,
-    Optional,
     TypeVar,
-    Union,
 )
 
 from fastapi import APIRouter, params
@@ -61,11 +59,11 @@ def same_definition_as_in(t: _T) -> Callable[[Callable], _T]:
     return decorator
 
 
-class HeaderVersionedAPIRoute(APIRoute):
+class VersionedAPIRoute(APIRoute):
     api_version = None
 
     def is_version_matching(self, scope: Scope) -> bool:
-        requested_version = scope["requested_version"]
+        requested_version = scope.get("requested_version", self.api_version)
         return self.api_version == requested_version
 
     def matches(self, scope: Scope) -> tuple[Match, Scope]:
@@ -74,6 +72,7 @@ class HeaderVersionedAPIRoute(APIRoute):
         if match == Match.NONE or match == Match.PARTIAL:
             return match, child_scope
 
+        # here match is FULL - we need to check requested_version if exists
         if self.is_version_matching(scope):
             return Match.FULL, child_scope
 
@@ -85,7 +84,7 @@ def specific_version_api_route(
     version: str,
     route_class: type[APIRoute] = APIRoute,
 ) -> type[APIRoute]:
-    class SpecificVersionAPIRoute(HeaderVersionedAPIRoute, route_class):
+    class SpecificVersionAPIRoute(VersionedAPIRoute, route_class):
         api_version = version
 
     return SpecificVersionAPIRoute
@@ -102,6 +101,112 @@ async def handle_non_existing_version(
 
     response = PlainTextResponse("Not Acceptable", status_code=406)  # pragma: no cover
     await response(scope, receive, send)  # pragma: no cover
+
+
+class VersionedAPIRouter(APIRouter):
+    def __init__(
+        self,
+        default_version: str | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        self.default_version: str | None = default_version
+        self._context_version: str | None = None
+        self.registered_versions: set[str | None] = set()
+        self.registered_versions.add(self.default_version)
+        super().__init__(*args, **kwargs)
+
+    def version(
+        self,
+        api_version: str,
+    ) -> Callable[[DecoratedCallable], DecoratedCallable]:
+        self.registered_versions.add(api_version)
+
+        def decorator(func: DecoratedCallable) -> DecoratedCallable:
+            func.__endpoint_api_version__ = api_version
+            return func
+
+        return decorator
+
+    @same_definition_as_in(APIRouter.add_api_route)
+    def add_api_route(
+        self,
+        path: str,
+        endpoint: Callable[..., Any],
+        *,
+        route_class_override: type[APIRoute] | None = None,
+        **kwargs: Any,
+    ):
+        if route_class_override:
+            # called from include_router or similar functions - we are re-generating routes
+
+            # don't override route_class for already versioned routes
+            if (
+                not issubclass(route_class_override, VersionedAPIRoute)
+                and self._context_version
+            ):
+                # need to wrap original route class with HeaderVersionedAPIRoute
+                # currently including routes from unversioned router with some externally defined version
+                route_class_override = specific_version_api_route(
+                    self._context_version,
+                    route_class_override,
+                )
+        else:
+            # called from decorator-based routes declaration. extract __endpoint_api_version__ if set and generate
+            # proper route
+            if endpoint_version := getattr(endpoint, "__endpoint_api_version__", None):
+                route_class_override = specific_version_api_route(
+                    endpoint_version, APIRoute
+                )
+            else:
+                # wrap with default version
+                route_class_override = specific_version_api_route(
+                    self.default_version, APIRoute
+                )
+
+        super().add_api_route(
+            path, endpoint, route_class_override=route_class_override, **kwargs
+        )
+
+    def include_router(
+        self,
+        router: "APIRouter",
+        *,
+        prefix: str = "",
+        version: str | None = None,
+        tags: list[str | Enum] | None = None,
+        dependencies: Sequence[params.Depends] | None = None,
+        default_response_class: type[Response] = Default(JSONResponse),
+        responses: dict[int | str, dict[str, Any]] | None = None,
+        callbacks: list[BaseRoute] | None = None,
+        deprecated: bool | None = None,
+        include_in_schema: bool = True,
+        generate_unique_id_function: Callable[[APIRoute], str] = Default(
+            generate_unique_id,
+        ),
+    ) -> None:
+        """
+        If 'version' provided - include all the unversioned routes with this version. May be used to wrap existing
+        routers with desired version.
+        """
+        self._context_version = version
+        self.registered_versions.add(version)
+        super().include_router(
+            router=router,
+            prefix=prefix,
+            tags=tags,
+            dependencies=dependencies,
+            default_response_class=default_response_class,
+            responses=responses,
+            callbacks=callbacks,
+            deprecated=deprecated,
+            include_in_schema=include_in_schema,
+            generate_unique_id_function=generate_unique_id_function,
+        )
+        if isinstance(router, VersionedAPIRouter):
+            self.registered_versions.update(router.registered_versions)
+
+        self._context_version = None
 
 
 class HeaderVersionedAPIRouter(APIRouter):
@@ -143,7 +248,7 @@ class HeaderVersionedAPIRouter(APIRouter):
 
             # don't override route_class for already versioned routes
             if (
-                not issubclass(route_class_override, HeaderVersionedAPIRoute)
+                not issubclass(route_class_override, VersionedAPIRoute)
                 and self._context_version
             ):
                 # need to wrap original route class with HeaderVersionedAPIRoute

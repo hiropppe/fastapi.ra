@@ -22,7 +22,7 @@
 
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute

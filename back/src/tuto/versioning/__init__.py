@@ -1,4 +1,4 @@
-# Copyright (c) 2023 DeanWay
+# Copyright (c) 2021 tikon93
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,23 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-# Modified from: https://github.com/DeanWay/fastapi-versioning
+# Modified from: https://github.com/tikon93/fastapi-header-versioning
 
-from typing import Any
+from .fastapi import HeaderRoutingFastAPI
+from .routing import VersionedAPIRoute, HeaderVersionedAPIRouter
 
-from fastapi.routing import APIRoute
-
-
-def versioned_api_route(
-    major: int = 1, minor: int = 0, route_class: type[APIRoute] = APIRoute
-) -> type[APIRoute]:
-    class VersionedAPIRoute(route_class):  # type: ignore
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            super().__init__(*args, **kwargs)
-            try:
-                self.endpoint._api_version = (major, minor)
-            except AttributeError:
-                # Support bound methods
-                self.endpoint.__func__._api_version = (major, minor)
-
-    return VersionedAPIRoute
+__all__ = [
+    "HeaderRoutingFastAPI",
+    "HeaderVersionedAPIRouter",
+    "VersionedAPIRoute",
+]

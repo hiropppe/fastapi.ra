@@ -21,7 +21,7 @@
 # Modified from: https://github.com/tikon93/fastapi-header-versioning
 
 from collections.abc import Callable, Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.applications import AppType
@@ -59,6 +59,7 @@ class CustomHeaderVersionMiddleware:
         return await self.app(scope, receive, send)
 
 
+@DeprecationWarning
 class HeaderRoutingFastAPI(FastAPI):
     def __init__(
         self,
