@@ -15,3 +15,5 @@ __pycache__
 /volumes/var/lib/mysql/*
 !.gitkeep
 
+/package.json
+/package-lock.json

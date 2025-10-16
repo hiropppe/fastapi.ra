@@ -63,8 +63,14 @@ USER root
 # Install dev packages
 RUN apt-get update \
  && apt-get install -y --no-install-recommends neovim python3-neovim git \
+    npm nodejs \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+# Install npm and node.js to install claude code
+RUN npm install n -g
+RUN n stable
+RUN apt-get purge -y nodejs npm
 
 # Add sudo support. Omit if you don't need to install software after connecting.
 RUN apt-get update \
