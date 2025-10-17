@@ -19,7 +19,7 @@ from tuto.auth.exceptions import (
     TemporaryPasswordGenerationError,
     UserNotFoundError,
 )
-from tuto.service.auth_protocol import AuthProtocol, Challenge, Token, TokenData
+from tuto.auth.protocol import AuthProtocol, Challenge, Token, TokenData
 
 logger = logging.getLogger(__name__)
 

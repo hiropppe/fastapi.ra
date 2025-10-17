@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from sqlalchemy import Column
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlmodel import Field, SQLModel
@@ -29,6 +30,3 @@ class BigPrimaryKeyMixin(SQLModel):
             comment="ID",
         ),
     )
-
-
-from .user import User

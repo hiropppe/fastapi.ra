@@ -7,8 +7,8 @@ sys.path.append((Path(__file__).resolve().parent.parent / "src").__str__())
 
 
 from tuto.auth.auth_helper import hash_password
+from tuto.core.user.models import NewUser, User
 from tuto.datasource.database import async_engine, async_session
-from tuto.model.user import NewUser, User
 
 
 async def create_test_user() -> None:

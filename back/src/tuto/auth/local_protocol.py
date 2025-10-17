@@ -6,6 +6,7 @@ import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import tuto.core.user.repository as user_repository
 from tuto.auth.auth_helper import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     ALGORITHM,
@@ -23,12 +24,10 @@ from tuto.auth.exceptions import (
     SystemConfigurationError,
     TemporaryPasswordGenerationError,
 )
+from tuto.auth.protocol import AuthProtocol, Challenge, Token, TokenData
 from tuto.auth.utils.email_sender import send_temporary_password_email
 from tuto.auth.utils.password_generator import generate_temporary_password
-from tuto.model.user import User
-from tuto.repository.impl import user_repository
-from tuto.service.auth_protocol import AuthProtocol, Challenge, Token, TokenData
-
+from tuto.core.user.models import User
 
 logging.getLogger("passlib").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -142,8 +141,8 @@ class LocalAuthService(AuthProtocol):
                 )
 
             # Find user
-            user: User | None = await user_repository.read_by_username_or_email(
-                username, self.session
+            user: User | None = await user_repository.get_by_username_or_email(
+                username, self.asession
             )
             if not user or user.id != session_data.get("user_id"):
                 raise HTTPException(
@@ -192,7 +191,7 @@ class LocalAuthService(AuthProtocol):
             logger.error(
                 f"Unexpected error in respond_to_new_password_challenge: {exc}"
             )
-            self.session.rollback()
+            await self.asession.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to respond to new password challenge",
@@ -242,8 +241,27 @@ class LocalAuthService(AuthProtocol):
         access_token: str,
         old_password: str,
         new_password: str,
-    ):
-        raise NotImplementedError
+    ) -> None:
+        # Trim whitespace from passwords
+        old_password = old_password.strip()
+        new_password = new_password.strip()
+
+        token_data: TokenData = await self.get_token_info(access_token)
+        username: str = token_data.username
+
+        user: User | None = await user_repository.get_by_username_or_email(
+            username, self.asession
+        )
+
+        if not verify_password(old_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect old password",
+            )
+
+        user.hashed_password = hash_password(new_password)
+        self.asession.add(user)
+        await self.asession.commit()
 
     async def forget_password(
         self,
@@ -260,8 +278,8 @@ class LocalAuthService(AuthProtocol):
         """
         try:
             # Find user by username or email
-            user: User | None = await user_repository.read_by_username_or_email(
-                username, self.session
+            user: User | None = await user_repository.get_by_username_or_email(
+                username, self.asession
             )
             if not user:
                 raise HTTPException(
@@ -293,8 +311,8 @@ class LocalAuthService(AuthProtocol):
             user.password_is_temporary = True
             user.password_expires_at = password_expiry
 
-            self.session.add(user)
-            self.session.commit()
+            self.asession.add(user)
+            await self.asession.commit()
 
             # Send temporary password via email
             try:
@@ -302,9 +320,7 @@ class LocalAuthService(AuthProtocol):
                     user.email, username, temporary_password
                 )
                 masked_email = (
-                    user.email[:2]
-                    + "***@***"
-                    + user.email[user.email.rfind(".") :]
+                    user.email[:2] + "***@***" + user.email[user.email.rfind(".") :]
                     if user.email
                     else "***@***.***"
                 )
@@ -326,7 +342,7 @@ class LocalAuthService(AuthProtocol):
             ) as e:
                 logger.error(f"Failed to send temporary password email: {e}")
                 # Rollback database changes if email fails
-                self.session.rollback()
+                await self.asession.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Failed to send temporary password email",
@@ -337,7 +353,7 @@ class LocalAuthService(AuthProtocol):
             raise
         except Exception as exc:
             logger.error(f"Unexpected error in forgot_password: {exc}")
-            self.session.rollback()
+            await self.asession.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to process forgot password request",

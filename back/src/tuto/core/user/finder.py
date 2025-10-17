@@ -5,7 +5,7 @@ import sqlalchemy
 from sqlalchemy import Result, Row, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tuto.finder import FinderProtocol, PaginationResult, remove_spaces
+from tuto.core.finder import FinderProtocol, PaginationResult, remove_spaces
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

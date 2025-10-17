@@ -1,13 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends
 from sqlalchemy import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from tuto.datasource.database import get_async_session
-from tuto.model.user import User
-from tuto.repository.repository import RepositoryProtocol
+from tuto.core.repository import RepositoryProtocol
+from tuto.core.user.models import User
 
 
 async def get_by_username_or_email(

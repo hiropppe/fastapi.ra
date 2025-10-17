@@ -5,7 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.mysql import DATETIME, TINYINT, VARCHAR
 from sqlmodel import Field, SQLModel
 
-from tuto.model import BigPrimaryKeyMixin, TimestampMixin
+from tuto.core.models import BigPrimaryKeyMixin, TimestampMixin
 
 
 class UserBase(SQLModel):

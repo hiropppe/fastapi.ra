@@ -3,14 +3,15 @@ import sys
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.tuto.api.auth.enum import AuthMethod
-from tuto.api.auth.schemas import ForgotPasswordRequest, ForgotPasswordResponse
-from tuto.api.schema.auth_schema import Me
+import tuto.core.user.repository as user_repository
+from tuto.api.auth.enum import AuthMethod
+from tuto.api.auth.schemas import ForgotPasswordRequest, ForgotPasswordResponse, Me
+from tuto.auth import get_auth_service
 from tuto.auth.auth_helper import (
     SECURE_HTTP_ONLY_COOKIE,
     OAuth2PasswordOTPBearerUsingCookie,
@@ -18,21 +19,19 @@ from tuto.auth.auth_helper import (
     encode_cookie_data,
     get_token_source,
 )
+from tuto.auth.cognito_protocol import CognitoAuthService
 from tuto.auth.exceptions import CodeMismatchError, NotAuthorizedError
 from tuto.auth.ip_restriction import verify_ip_access
-from tuto.datasource.database import get_async_session
-from tuto.model.user import User
-from tuto.repository.impl import user_repository
-from tuto.service import get_auth_service
-from tuto.service.auth_protocol import (
+from tuto.auth.local_protocol import LocalAuthService
+from tuto.auth.protocol import (
     AuthProtocol,
     Challenge,
     Logedin,
     Token,
     TokenData,
 )
-from tuto.service.impl.cognito_auth_service import CognitoAuthService
-from tuto.service.impl.local_auth_service import LocalAuthService
+from tuto.core.user.models import User
+from tuto.datasource.database import get_async_session
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(levelname)s: %(asctime)s - %(message)s")
@@ -151,7 +150,7 @@ async def verify_totp(
             "iss": str(token.token_issued_time),
         }
         max_age = token.expires_in * 60  # Convert minutes to seconds
-        max_age += 60 * 60 * 24 * 7 # Set mergin for cookie expiration
+        max_age += 60 * 60 * 24 * 7  # Set mergin for cookie expiration
         set_auth_cookie(response, cookies, max_age=max_age)
     except (CodeMismatchError, NotAuthorizedError) as exc:
         raise HTTPException(
@@ -174,7 +173,9 @@ async def refresh_token(
     access_token: str = token[0]
     refresh_token: str | None = token[1]
     auth_service: AuthProtocol = get_auth_service_by_token(access_token, asession)
-    refreshed_token: Token = await auth_service.refersh_token(access_token, refresh_token) # type: ignore
+    refreshed_token: Token = await auth_service.refresh_token(
+        access_token, refresh_token
+    )
     cookies = {
         "at": refreshed_token.access_token,
         "rt": refreshed_token.refresh_token,
@@ -183,7 +184,7 @@ async def refresh_token(
         "iss": str(refreshed_token.token_issued_time),
     }
     max_age = refreshed_token.expires_in * 60  # Convert minutes to seconds
-    max_age += 60 * 60 * 24 * 7 # Set mergin for cookie expiration
+    max_age += 60 * 60 * 24 * 7  # Set mergin for cookie expiration
     set_auth_cookie(response, cookies, max_age=max_age)
     return Logedin(
         exp=refreshed_token.expires_in,
@@ -200,13 +201,17 @@ async def discard_token(
     access_token: str = token[0]
     refresh_token: str | None = token[1]
     auth_service: AuthProtocol = get_auth_service_by_token(access_token, asession)
-    success = await auth_service.discard_token(access_token, refresh_token) # type: ignore
+    success = await auth_service.discard_token(access_token, refresh_token)  # type: ignore
 
     json_response = JSONResponse(
-        content=jsonable_encoder({
-            "success": success,
-            "message": "Token successfully discarded" if success else "Failed to discard token - please clear local storage",
-        }),
+        content=jsonable_encoder(
+            {
+                "success": success,
+                "message": "Token successfully discarded"
+                if success
+                else "Failed to discard token - please clear local storage",
+            }
+        ),
     )
 
     delete_auth_cookie(json_response)
@@ -229,9 +234,15 @@ async def set_new_password(
     new_password: str = form_data["new_password"]
 
     auth_service = get_auth_service(username, asession)
-    token_or_challenge: Token | Challenge = await auth_service.respond_to_new_password_challenge(username, auth_session, new_password)
+    token_or_challenge: (
+        Token | Challenge
+    ) = await auth_service.respond_to_new_password_challenge(
+        username, auth_session, new_password
+    )
 
-    loggedin_or_challenge: Logedin | Challenge = set_auth_data_in_http_only_cookie(response, token_or_challenge)
+    loggedin_or_challenge: Logedin | Challenge = set_auth_data_in_http_only_cookie(
+        response, token_or_challenge
+    )
     return loggedin_or_challenge
 
 
@@ -245,21 +256,29 @@ async def change_password(
     refresh_token: str | None = token[1]
 
     form_data = await request.form()
-    previous_password: str = form_data["old_password"] # type: ignore
-    proposed_password: str = form_data["new_password"] # type: ignore
+    previous_password: str = form_data["old_password"]  # type: ignore
+    proposed_password: str = form_data["new_password"]  # type: ignore
 
     auth_service: AuthProtocol = get_auth_service_by_token(access_token, asession)
     try:
-        await auth_service.change_password(access_token, previous_password, proposed_password)
+        await auth_service.change_password(
+            access_token, previous_password, proposed_password
+        )
     except NotAuthorizedError:
-        token_info: Token = await auth_service.refersh_token(access_token, refresh_token) # type: ignore
-        await auth_service.change_password(token_info.access_token, previous_password, proposed_password)
+        token_info: Token = await auth_service.refersh_token(
+            access_token, refresh_token
+        )  # type: ignore
+        await auth_service.change_password(
+            token_info.access_token, previous_password, proposed_password
+        )
 
     return JSONResponse(
-        content=jsonable_encoder({
-            "success": True,
-            "message": "Password successfully changed",
-        }),
+        content=jsonable_encoder(
+            {
+                "success": True,
+                "message": "Password successfully changed",
+            }
+        ),
     )
 
 
@@ -268,14 +287,20 @@ async def forgot_password(
     request_data: ForgotPasswordRequest,
     asession: AsyncSession = Depends(get_async_session),
 ) -> ForgotPasswordResponse:
-    user: User | None = await user_repository.get_by_username_or_email(request_data.email, asession)
+    user: User | None = await user_repository.get_by_username_or_email(
+        request_data.email, asession
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Mail address not found",
         )
 
-    auth_service: AuthProtocol = CognitoAuthService() if user.auth_method == AuthMethod.COGNITO_EOTP else LocalAuthService(asession)
+    auth_service: AuthProtocol = (
+        CognitoAuthService()
+        if user.auth_method == AuthMethod.COGNITO_EOTP
+        else LocalAuthService(asession)
+    )
 
     try:
         result = await auth_service.forgot_password(user.username, request_data.email)

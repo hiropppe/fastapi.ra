@@ -1,11 +1,9 @@
-from typing import Protocol, TypeVar
-
-from sqlalchemy import Row
 import dataclasses
 import re
-from typing import Any
 from collections.abc import Sequence
+from typing import Any, Protocol, TypeVar
 
+from sqlalchemy import Row
 
 PK = TypeVar("PK", contravariant=True)  # primary key
 
