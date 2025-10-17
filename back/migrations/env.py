@@ -1,11 +1,19 @@
+# Import all models here to ensure they are registered with SQLModel.metadata
+import pathlib
 import re
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
-# Import all models here to ensure they are registered with SQLModel.metadata
+sys.path.append(
+    (
+        pathlib.Path(pathlib.Path(pathlib.Path(__file__).resolve()).parent).parent
+        / "src"
+    ).__str__()
+)
 import tuto.model  # noqa: F401
 
 # this is the Alembic Config object, which provides

@@ -1,15 +1,22 @@
+from tuto.model.user import User
 from tuto.service.auth_protocol import AuthProtocol
 from tuto.service.impl.cognito_auth_service import CognitoAuthService
 from tuto.service.impl.local_auth_service import LocalAuthService
 
-from fastapi import Depends
-from sqlmodel import Session
+from sqlmodel import select
 
-from tuto.datasource.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-def get_auth_service(
+async def get_auth_service(
     username: str,
-    session: Session = Depends(get_session),
+    asession: AsyncSession,
 ) -> AuthProtocol:
-    return LocalAuthService(session)
+    user: User | None = await asession.scalar(
+        select(User).where(User.username == username)
+    )
+    if user is None:
+        raise ValueError(f"User with username {username} not found")
+    if user.auth_method == "cognito_eotp":
+        return CognitoAuthService()
+    return LocalAuthService(asession)

@@ -251,7 +251,7 @@ class CognitoAuthService(AuthProtocol):
                 logger.error(f"Failed to generate temporary password: {e}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="一時パスワードの生成に失敗しました",
+                    detail="Failed to generate temporary password",
                 ) from e
 
             # Set temporary password for the user (permanent=False forces password change)
@@ -263,7 +263,7 @@ class CognitoAuthService(AuthProtocol):
                 logger.warning(f"User not found during password set: {username}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="ユーザーが見つかりません",
+                    detail="User not found",
                 ) from e
             except Exception as e:
                 logger.error(f"Failed to set temporary password for {username}: {e}")
@@ -289,14 +289,14 @@ class CognitoAuthService(AuthProtocol):
                 if not user_email:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="ユーザーのメールアドレスが見つかりません",
+                        detail="User does not have an email address set",
                     )
 
                 # Verify that the provided email matches the user's email
                 if email and user_email != email:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail="ユーザー名またはメールアドレスが一致しません",
+                        detail="Email address does not match our records",
                     )
 
                 # Send temporary password via email
@@ -328,7 +328,7 @@ class CognitoAuthService(AuthProtocol):
                     logger.error(f"Failed to send temporary password email: {e}")
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="一時パスワードのメール送信に失敗しました",
+                        detail="Failed to send temporary password email",
                     ) from e
 
             except cognito_idp_client.exceptions.UserNotFoundException:
@@ -345,7 +345,7 @@ class CognitoAuthService(AuthProtocol):
                 logger.error(f"Failed to get user info for {username}: {e}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="パスワードリセット処理に失敗しました",
+                    detail="Failed to retrieve user information",
                 ) from e
 
         except HTTPException:
@@ -354,24 +354,24 @@ class CognitoAuthService(AuthProtocol):
         except cognito_idp_client.exceptions.UserNotFoundException as exc:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="ユーザーが見つかりません",
+                detail="User not found",
             ) from exc
         except cognito_idp_client.exceptions.LimitExceededException as exc:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="リクエスト回数が制限を超えています。しばらく時間をおいてから再度お試しください。",
+                detail="Request limit exceeded, please try again later",
             ) from exc
         except cognito_idp_client.exceptions.InvalidParameterException as exc:
             logger.error(f"Invalid parameter for password reset: {exc}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="リクエストパラメータが無効です",
+                detail="Invalid parameters for password reset",
             ) from exc
         except (CognitoPasswordResetError, TemporaryPasswordGenerationError) as exc:
             logger.error(f"Password reset error: {exc}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="パスワードリセット処理に失敗しました",
+                detail="Failed to reset password",
             ) from exc
 
     async def create_cognito_user(
@@ -406,26 +406,26 @@ class CognitoAuthService(AuthProtocol):
             logger.warning(f"User already exists in Cognito: {username}")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="ユーザー名は既に使用されています",
+                detail="User already exists in Cognito",
             ) from e
         except cognito_idp_client.exceptions.InvalidParameterException as e:
             logger.error(f"Invalid parameter for user creation: {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ユーザー作成パラメータが無効です",
+                detail="Invalid parameters for creating Cognito user",
             ) from e
         except Exception as e:
             logger.error(f"Failed to create Cognito user {username}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Cognitoユーザー作成に失敗しました",
+                detail="Failed to create Cognito user",
             ) from e
 
     async def update_cognito_user(
         self,
         username: str,
-        email: str = None,
-        password: str = None,
+        email: str | None = None,
+        password: str | None = None,
         password_is_temporary: bool = True,
     ) -> dict:
         """
@@ -472,19 +472,19 @@ class CognitoAuthService(AuthProtocol):
             logger.warning(f"User not found in Cognito: {username}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cognitoユーザーが見つかりません",
+                detail="User not found in Cognito",
             ) from e
         except cognito_idp_client.exceptions.InvalidParameterException as e:
             logger.error(f"Invalid parameter for user update: {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ユーザー更新パラメータが無効です",
+                detail="Invalid parameters for updating Cognito user",
             ) from e
         except Exception as e:
             logger.error(f"Failed to update Cognito user {username}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Cognitoユーザー更新に失敗しました",
+                detail="Failed to update Cognito user",
             ) from e
 
     async def delete_cognito_user(self, username: str) -> dict:
@@ -506,13 +506,13 @@ class CognitoAuthService(AuthProtocol):
             logger.warning(f"User not found in Cognito: {username}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Cognitoユーザーが見つかりません",
+                detail="User not found in Cognito",
             ) from e
         except Exception as e:
             logger.error(f"Failed to delete Cognito user {username}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Cognitoユーザー削除に失敗しました",
+                detail="Failed to delete Cognito user",
             ) from e
 
 

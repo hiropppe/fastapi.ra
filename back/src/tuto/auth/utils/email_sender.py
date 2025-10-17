@@ -4,19 +4,20 @@ from pathlib import Path
 
 import boto3
 import jinja2
-from auth.exceptions import (
+from botocore.exceptions import ClientError
+
+from tuto.auth.exceptions import (
     EmailDeliveryError,
     EmailTemplateError,
     SystemConfigurationError,
 )
-from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
 # AWS SES configuration
 AWS_REGION = os.environ.get("AWS_DEFAULT_REGION", "ap-northeast-1")
 SES_CONFIG_SET = os.environ.get("AUTH_SES_CONFIG_SET", "")
-DEFAULT_FROM_EMAIL = os.environ.get("AUTH_FROM_EMAIL", "job.support@shigotoin.com")
+DEFAULT_FROM_EMAIL = os.environ.get("AUTH_FROM_EMAIL", "noreply@example.com")
 
 
 def _get_ses_client():

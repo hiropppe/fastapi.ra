@@ -64,6 +64,62 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
+def get_token_source(token: str) -> str | None:
+    """JWTトークンのヘッダーを見て、どちらが発行したトークンか判別する"""
+    try:
+        # JWTを '.' で分割してヘッダー部分を取得
+        header_b64 = token.split(".")[0]
+
+        # Base64URLデコード（パディング調整）
+        # Base64URLでは '-' を '+' に、'_' を '/' に置換
+        header_b64 += "=" * (4 - len(header_b64) % 4)  # パディング調整
+        header_b64 = header_b64.replace("-", "+").replace("_", "/")
+
+        # Base64デコードしてJSONパース
+        header_json = base64.b64decode(header_b64).decode("utf-8")
+        header = json.loads(header_json)
+
+        # アルゴリズムで判別
+        if header.get("alg") == "HS256":
+            return "old"
+        if header.get("alg") == "RS256":
+            return "cognito"
+
+        # issuerがヘッダーにある場合（稀ですが）
+        if header.get("iss") and "cognito" in header.get("iss"):
+            return "cognito"
+
+        return "unknown"
+
+    except Exception as e:
+        print(f"トークン解析エラー: {e}")
+        return "invalid"
+
+
+def get_token_source_by_payload(token: str) -> str | None:
+    """JWTトークンのペイロードのissuerを見て判別する"""
+    try:
+        # ペイロード部分を取得
+        payload_b64 = token.split(".")[1]
+
+        # Base64URLデコード
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        payload_b64 = payload_b64.replace("-", "+").replace("_", "/")
+
+        payload_json = base64.b64decode(payload_b64).decode("utf-8")
+        payload = json.loads(payload_json)
+
+        # issuerで判別
+        if payload.get("iss") and "cognito-idp" in payload.get("iss"):
+            return "cognito"
+
+        return "old"
+
+    except Exception as e:
+        print(f"トークン解析エラー: {e}")
+        return "invalid"
+
+
 def encode_cookie_data(data: dict[str, Any]) -> str:
     """複数の値を1つのCookieにエンコード"""
     json_str = json.dumps(data, separators=(",", ":"))

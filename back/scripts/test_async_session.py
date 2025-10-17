@@ -1,11 +1,9 @@
 import asyncio
-import pathlib
 import sys
+from pathlib import Path
 
 # プロジェクトのパスを追加
-sys.path.append(
-    pathlib.Path(pathlib.Path(pathlib.Path(__file__).resolve()).parent).parent.__str__()
-)
+sys.path.append((Path(__file__).resolve().parent.parent / "src").__str__())
 
 
 from tuto.auth.auth_helper import hash_password
@@ -22,10 +20,13 @@ async def create_test_user() -> None:
     # async context managerを使用
     async with async_session() as asession:
         new_user = NewUser(
-            username="testuser",
-            email="testuser@test.com",
-            nickname="test",
-            password="testtest",
+            username="take",
+            email="take@test.com",
+            nickname="take",
+            password="taKe.910",
+            auth_method="password",
+            password_is_temporary=False,
+            password_expires_at=None,
         )
         new_user.hashed_password = hash_password(new_user.password)
 

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from tuto.api.router import v0_1_0, v0_1_1
+from tuto.auth.auth_helper import OAuth2PasswordOTPBearerUsingCookie
 from tuto.versioning.fastapi import (
     CustomHeaderVersionMiddleware,
 )

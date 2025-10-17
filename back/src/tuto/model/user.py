@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import ClassVar
 
 from sqlalchemy import Column
-from sqlalchemy.dialects.mysql import TINYINT, VARCHAR
+from sqlalchemy.dialects.mysql import DATETIME, TINYINT, VARCHAR
 from sqlmodel import Field, SQLModel
 
 from tuto.model import BigPrimaryKeyMixin, TimestampMixin
@@ -32,6 +33,21 @@ class UserBase(SQLModel):
 
     is_active: bool = Field(
         default=True, sa_type=TINYINT, sa_column_kwargs={"comment": "アクティブ"}
+    )
+
+    auth_method: str = Field(
+        sa_column=Column(VARCHAR(50), nullable=False, comment="認証方式")
+    )
+
+    # Password reset fields
+    password_is_temporary: bool = Field(
+        default=False,
+        sa_type=TINYINT,
+        sa_column_kwargs={"comment": "一時パスワードフラグ"},
+    )
+    password_expires_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DATETIME, nullable=True, comment="パスワード有効期限"),
     )
 
     hashed_password: str | None = Field(

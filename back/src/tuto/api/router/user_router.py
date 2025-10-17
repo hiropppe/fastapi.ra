@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tuto.api.router.auth_router import get_me
+from tuto.api.auth import router as auth_router
 from tuto.api.schema.auth_schema import Me
 from tuto.api.schema.base_schema import ListResponse
 from tuto.api.schema.user_schema import UserSchema
@@ -28,7 +28,7 @@ async def get_list(
     criteria: Annotated[str, Query(alias="filter")],
     sort: str,
     query_range: Annotated[str, Query(alias="range")],
-    current_user: Annotated[Me, Depends(get_me)],
+    current_user: Annotated[Me, Depends(auth_router.get_current_me)],
     response: Response,
     asession: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ListResponse[UserSchema]:
