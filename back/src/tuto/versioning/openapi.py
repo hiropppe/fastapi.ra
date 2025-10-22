@@ -55,6 +55,10 @@ def doc_generation(
             description=version_description + " " + app.description,
             version=version,
         )
+
+        # Copy parent app's exception handlers
+        versioned_app.exception_handlers = parent_app.exception_handlers.copy()
+
         for route in version_route_mapping[version]:
             if isinstance(route, APIRoute):
                 for method in route.methods:
